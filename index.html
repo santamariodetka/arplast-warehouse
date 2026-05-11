@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>АРПЛАСТ — Складской учёт (облако)</title>
+    <title>АРПЛАСТ — Учёт стрейч-плёнки</title>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -51,6 +51,7 @@
         .btn-accent:hover { background: #d4a017; }
         .btn-danger { background: var(--danger); }
         .btn-danger:hover { background: #a71d2a; }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
         .container {
             max-width: 1100px; margin: 25px auto;
             padding: 0 20px; flex: 1; width: 100%;
@@ -94,6 +95,8 @@
         .tab.active { background: var(--primary); color: white; }
         .error-message { color: red; font-size: 13px; margin-top: 5px; }
         .success-message { color: green; font-size: 13px; margin-top: 5px; }
+        .password-cell { display: flex; align-items: center; gap: 5px; }
+        .password-cell span { font-family: monospace; }
         @media (max-width: 600px) {
             .header { flex-direction: column; align-items: flex-start; }
             .stats-row { flex-direction: column; }
@@ -109,7 +112,7 @@
         </div>
         <div class="user-info" id="userInfoBlock" style="display:none;">
             <span id="currentUserDisplay" style="font-weight:600;"></span>
-            <button class="btn" id="logoutBtn" onclick="logout()">Выйти</button>
+            <button class="btn" onclick="logout()">Выйти</button>
         </div>
     </header>
 
@@ -117,8 +120,14 @@
         <!-- Страница входа -->
         <div id="loginPage" class="card" style="max-width:450px; margin:60px auto;">
             <h2 style="text-align:center; margin-bottom:20px;">Вход в систему</h2>
-            <div class="form-group"><label>Логин</label><input type="text" id="loginUsername" placeholder="Введите логин"></div>
-            <div class="form-group"><label>Пароль</label><input type="password" id="loginPassword" placeholder="Введите пароль"></div>
+            <div class="form-group">
+                <label>Логин</label>
+                <input type="text" id="loginUsername" placeholder="Введите логин">
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="loginPassword" placeholder="Введите пароль">
+            </div>
             <div class="error-message" id="loginError"></div>
             <button class="btn" style="width:100%; margin-top:10px;" onclick="handleLogin()">Войти</button>
             <p style="text-align:center; margin-top:15px;">По умолчанию: <b>admin</b> / <b>admin</b></p>
@@ -131,6 +140,7 @@
                 <button class="tab" data-tab="myRecords">Мои записи</button>
                 <button class="tab" data-tab="changePass">Сменить пароль</button>
             </div>
+
             <div id="workerNewRecord" class="card">
                 <h3>Запись за смену</h3>
                 <div class="form-group"><label>Дата</label><input type="date" id="recordDate" required></div>
@@ -140,6 +150,7 @@
                 <button class="btn btn-accent" onclick="saveRecord()">Сохранить запись</button>
                 <div id="recordMessage" class="error-message"></div>
             </div>
+
             <div id="workerMyRecords" class="hidden card">
                 <h3>Моя статистика</h3>
                 <div class="stats-row" id="workerStats"></div>
@@ -147,6 +158,7 @@
                 <table><thead><tr><th>Дата</th><th>Произведено</th><th>Брак</th><th>Причина</th></tr></thead>
                     <tbody id="workerRecordsTable"></tbody></table>
             </div>
+
             <div id="workerChangePass" class="hidden card">
                 <h3>Смена пароля</h3>
                 <div class="form-group"><label>Новый пароль</label><input type="password" id="newWorkerPass" required></div>
@@ -163,18 +175,29 @@
                 <button class="tab" data-tab="allRecords">Все записи</button>
                 <button class="tab" data-tab="globalStats">Статистика</button>
             </div>
+
             <div id="adminUsers" class="card">
                 <h3>Список пользователей</h3>
-                <table><thead><tr><th>Логин</th><th>Роль</th><th>Действие</th></tr></thead><tbody id="usersTableBody"></tbody></table>
+                <table>
+                    <thead>
+                        <tr><th>Логин</th><th>Роль</th><th>Пароль</th><th>Действие</th></tr>
+                    </thead>
+                    <tbody id="usersTableBody"></tbody>
+                </table>
             </div>
+
             <div id="adminAddUser" class="hidden card">
                 <h3>Добавить пользователя</h3>
                 <div class="form-group"><label>Логин</label><input type="text" id="newUserLogin" required></div>
                 <div class="form-group"><label>Пароль</label><input type="password" id="newUserPass" required></div>
-                <div class="form-group"><label>Роль</label><select id="newUserRole"><option value="worker">Рабочий</option><option value="admin">Админ</option></select></div>
+                <div class="form-group"><label>Роль</label><select id="newUserRole">
+                    <option value="worker">Рабочий</option>
+                    <option value="admin">Админ</option>
+                </select></div>
                 <button class="btn" onclick="addUser()">Создать</button>
                 <div id="addUserMsg" class="error-message"></div>
             </div>
+
             <div id="adminAllRecords" class="hidden card">
                 <h3>Фильтр записей</h3>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
@@ -183,9 +206,12 @@
                     <div class="form-group" style="flex:1; min-width:150px;"><label>Пользователь</label><select id="filterUser"><option value="all">Все</option></select></div>
                     <button class="btn" style="height:40px;" onclick="loadAllRecords()">Показать</button>
                 </div>
-                <table style="margin-top:20px;"><thead><tr><th>Дата</th><th>Сотрудник</th><th>Произведено</th><th>Брак</th><th>Причина</th></tr></thead>
-                    <tbody id="allRecordsTable"></tbody></table>
+                <table style="margin-top:20px;">
+                    <thead><tr><th>Дата</th><th>Сотрудник</th><th>Произведено</th><th>Брак</th><th>Причина</th></tr></thead>
+                    <tbody id="allRecordsTable"></tbody>
+                </table>
             </div>
+
             <div id="adminGlobalStats" class="hidden card">
                 <h3>Общая статистика</h3>
                 <div class="stats-row" id="globalStatsRow"></div>
@@ -195,7 +221,7 @@
     </div>
 
     <script>
-        // ========== ВСТАВЬТЕ СЮДА СВОЙ FIREBASE КОНФИГ ==========
+        // ================= ВСТАВЬТЕ СЮДА ВАШ КОНФИГ ===================
         const firebaseConfig = {
             apiKey: "AIzaSyA2Lvm2XUiRNLAmYeOMk1-fQ60OkPBImuk",
   authDomain: "arplast-faa75.firebaseapp.com",
@@ -206,43 +232,42 @@
   appId: "1:301530736071:web:8d6521eebaf4aaf49f65e2",
   measurementId: "G-3QCFSCHK3W"
         };
-        // ====================================================
+        // ==============================================================
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         let currentUser = null;
 
-        // DOM элементы
         const loginPage = document.getElementById('loginPage');
         const workerPage = document.getElementById('workerPage');
         const adminPage = document.getElementById('adminPage');
         const userInfoBlock = document.getElementById('userInfoBlock');
         const currentUserDisplay = document.getElementById('currentUserDisplay');
 
-        // Загрузка данных при старте
+        // Инициализация
         window.addEventListener('DOMContentLoaded', async () => {
-            // Проверяем, есть ли сохранённая сессия
             const saved = sessionStorage.getItem('currentUser');
             if (saved) {
                 currentUser = JSON.parse(saved);
-                // Убедимся, что такой пользователь существует в базе
+                // Проверим, что такой пользователь всё ещё существует
                 const snap = await db.ref('users').orderByChild('username').equalTo(currentUser.username).once('value');
                 if (!snap.exists()) {
-                    // Пользователь был удалён из базы
                     sessionStorage.removeItem('currentUser');
                     currentUser = null;
+                } else {
+                    // Обновим данные из базы (на случай смены пароля)
+                    snap.forEach(child => {
+                        currentUser = child.val();
+                    });
+                    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
                 }
             }
 
-            // Создаём admin/admin, если база пуста
+            // Создаём администратора по умолчанию, если база пуста
             const rootSnap = await db.ref('users').once('value');
             if (!rootSnap.exists()) {
-                await db.ref('users').push({
-                    username: 'admin',
-                    password: 'admin',
-                    role: 'admin'
-                });
+                await db.ref('users').push({ username: 'admin', password: 'admin', role: 'admin' });
             }
 
             updateUI();
@@ -310,14 +335,10 @@
             const defect = parseFloat(document.getElementById('defect').value) || 0;
             const reason = document.getElementById('defectReason').value.trim();
             const msgEl = document.getElementById('recordMessage');
-            if (!date) {
-                msgEl.textContent = 'Выберите дату'; return;
-            }
-            if (produced < 0 || defect < 0) {
-                msgEl.textContent = 'Нельзя вводить отрицательные числа'; return;
-            }
+            if (!date) { msgEl.textContent = 'Выберите дату'; return; }
+            if (produced < 0 || defect < 0) { msgEl.textContent = 'Нельзя отрицательные числа'; return; }
 
-            // Удаляем старую запись за эту дату этого пользователя
+            // Удаляем старую запись этого пользователя за эту дату
             const existing = await db.ref('records').orderByChild('date').equalTo(date).once('value');
             const updates = {};
             existing.forEach(child => {
@@ -326,13 +347,7 @@
                 }
             });
             const newKey = db.ref('records').push().key;
-            updates[newKey] = {
-                username: currentUser.username,
-                date: date,
-                produced: produced,
-                defect: defect,
-                reason: reason
-            };
+            updates[newKey] = { username: currentUser.username, date, produced, defect, reason };
 
             try {
                 await db.ref('records').update(updates);
@@ -368,7 +383,7 @@
 
             const sorted = myRecords.sort((a,b) => b.date.localeCompare(a.date)).slice(0, 20);
             const tbody = document.getElementById('workerRecordsTable');
-            tbody.innerHTML = sorted.length ? sorted.map(r => 
+            tbody.innerHTML = sorted.length ? sorted.map(r =>
                 `<tr><td>${r.date}</td><td>${r.produced}</td><td>${r.defect}</td><td>${r.reason || '-'}</td></tr>`
             ).join('') : '<tr><td colspan="4">Нет записей</td></tr>';
         }
@@ -395,7 +410,9 @@
         }
 
         function switchWorkerTab(tab) {
-            document.querySelectorAll('#workerPage .card').forEach(c => c.classList.add('hidden'));
+            document.getElementById('workerNewRecord').classList.add('hidden');
+            document.getElementById('workerMyRecords').classList.add('hidden');
+            document.getElementById('workerChangePass').classList.add('hidden');
             document.querySelectorAll('#workerPage .tab').forEach(t => t.classList.remove('active'));
             if (tab === 'newRecord') {
                 document.getElementById('workerNewRecord').classList.remove('hidden');
@@ -411,11 +428,15 @@
             }
         }
 
-        // ========== Админ-панель ==========
+        document.querySelector('#workerPage .nav-tabs').addEventListener('click', e => {
+            if (e.target.classList.contains('tab')) switchWorkerTab(e.target.dataset.tab);
+        });
+
+        // ========== Администратор ==========
         async function refreshAdminData() {
+            await populateUserFilter();
+            await switchAdminTab('users', true); // принудительно показываем польз.
             await renderAdminUsers();
-            populateUserFilter();
-            switchAdminTab('users');
         }
 
         async function renderAdminUsers() {
@@ -426,31 +447,45 @@
             tbody.innerHTML = users.map(u => `
                 <tr>
                     <td>${u.username}</td>
-                    <td>${u.role === 'admin' ? 'Администратор' : 'Рабочий'}</td>
-                    <td>${u.username !== 'admin' ? 
-                        `<button class="btn btn-danger" onclick="deleteUser('${u.username}')">Удалить</button>` : 
-                        'Системный'}
+                    <td>${u.role === 'admin' ? 'Админ' : 'Рабочий'}</td>
+                    <td>
+                        <div class="password-cell">
+                            <span id="pass_${u.username}">${'*'.repeat(u.password.length)}</span>
+                            <button class="btn btn-sm" onclick="togglePassword('${u.username}', '${u.password.replace(/'/g, "\\'")}')">👁</button>
+                        </div>
+                    </td>
+                    <td>
+                        ${u.username !== 'admin' ? 
+                            `<button class="btn btn-danger btn-sm" onclick="deleteUser('${u.username}')">Удалить</button>` : 
+                            'Системный'}
                     </td>
                 </tr>
             `).join('');
         }
 
+        // Вспомогательная функция для показа/скрытия пароля
+        window.togglePassword = function(username, realPass) {
+            const span = document.getElementById('pass_' + username);
+            if (span.textContent === realPass) {
+                span.textContent = '*'.repeat(realPass.length);
+            } else {
+                span.textContent = realPass;
+            }
+        };
+
         async function deleteUser(username) {
             if (!confirm(`Удалить пользователя ${username}?`)) return;
-            // Удаляем пользователя
             const snapUsers = await db.ref('users').orderByChild('username').equalTo(username).once('value');
             const userUpdates = {};
             snapUsers.forEach(child => { userUpdates[child.key] = null; });
             await db.ref('users').update(userUpdates);
 
-            // Удаляем его записи
             const snapRecords = await db.ref('records').orderByChild('username').equalTo(username).once('value');
             const recordUpdates = {};
             snapRecords.forEach(child => { recordUpdates[child.key] = null; });
             await db.ref('records').update(recordUpdates);
 
-            await renderAdminUsers();
-            populateUserFilter();
+            await refreshAdminData();
         }
 
         async function addUser() {
@@ -466,14 +501,15 @@
                 msgEl.textContent = 'Пользователь уже существует'; return;
             }
             await db.ref('users').push({ username: login, password: pass, role: role });
-            msgEl.textContent = '';
-            msgEl.className = 'success-message';
-            msgEl.textContent = 'Создан!';
+            // Очищаем форму
             document.getElementById('newUserLogin').value = '';
             document.getElementById('newUserPass').value = '';
-            setTimeout(() => { msgEl.textContent = ''; }, 3000);
-            await renderAdminUsers();
-            populateUserFilter();
+            msgEl.textContent = '';
+            msgEl.className = 'success-message';
+            msgEl.textContent = 'Пользователь создан!';
+            setTimeout(() => { msgEl.textContent = ''; msgEl.className = 'error-message'; }, 3000);
+            // Переключаемся на вкладку "Пользователи" и обновляем таблицу
+            await refreshAdminData();
         }
 
         async function populateUserFilter() {
@@ -520,37 +556,33 @@
             `;
         }
 
-        function switchAdminTab(tab) {
-            document.querySelectorAll('#adminPage .card').forEach(c => c.classList.add('hidden'));
+        function switchAdminTab(tab, force = false) {
+            if (!force && document.querySelector(`#adminPage .tab.active[data-tab="${tab}"]`)) return; // уже активна
+            document.getElementById('adminUsers').classList.add('hidden');
+            document.getElementById('adminAddUser').classList.add('hidden');
+            document.getElementById('adminAllRecords').classList.add('hidden');
+            document.getElementById('adminGlobalStats').classList.add('hidden');
             document.querySelectorAll('#adminPage .tab').forEach(t => t.classList.remove('active'));
-            if (tab === 'users') {
-                document.getElementById('adminUsers').classList.remove('hidden');
-                document.querySelector('#adminPage .tab[data-tab="users"]').classList.add('active');
-                renderAdminUsers();
-            } else if (tab === 'addUser') {
-                document.getElementById('adminAddUser').classList.remove('hidden');
-                document.querySelector('#adminPage .tab[data-tab="addUser"]').classList.add('active');
-            } else if (tab === 'allRecords') {
-                document.getElementById('adminAllRecords').classList.remove('hidden');
-                document.querySelector('#adminPage .tab[data-tab="allRecords"]').classList.add('active');
-                populateUserFilter();
-                loadAllRecords();
-            } else if (tab === 'globalStats') {
-                document.getElementById('adminGlobalStats').classList.remove('hidden');
-                document.querySelector('#adminPage .tab[data-tab="globalStats"]').classList.add('active');
-                loadGlobalStats();
-            }
+
+            const tabMap = {
+                users: 'adminUsers',
+                addUser: 'adminAddUser',
+                allRecords: 'adminAllRecords',
+                globalStats: 'adminGlobalStats'
+            };
+            document.getElementById(tabMap[tab]).classList.remove('hidden');
+            document.querySelector(`#adminPage .tab[data-tab="${tab}"]`).classList.add('active');
+
+            if (tab === 'users') renderAdminUsers();
+            if (tab === 'allRecords') loadAllRecords();
+            if (tab === 'globalStats') loadGlobalStats();
         }
 
-        // Вкладки
-        document.querySelector('#workerPage .nav-tabs').addEventListener('click', e => {
-            if (e.target.classList.contains('tab')) switchWorkerTab(e.target.dataset.tab);
-        });
         document.querySelector('#adminPage .nav-tabs').addEventListener('click', e => {
             if (e.target.classList.contains('tab')) switchAdminTab(e.target.dataset.tab);
         });
 
-        // Enter на входе
+        // Обработка Enter при входе
         document.getElementById('loginPassword').addEventListener('keypress', e => {
             if (e.key === 'Enter') handleLogin();
         });

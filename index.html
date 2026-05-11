@@ -3,63 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>АРПЛАСТ — Складской учёт (облачная версия)</title>
-    <!-- Подключаем Firebase -->
+    <title>АРПЛАСТ — Учёт стрейч-плёнки</title>
+    <!-- Firebase SDK (совместимый) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
     <style>
         :root {
-            --primary: #0a1f44; --primary-light: #1a3568; --accent: #e6b422;
-            --danger: #c0392b; --bg: #f4f6f9; --card: #ffffff; --text: #2c3e50; --border: #dcdde1;
+            --primary: #0a1f44;
+            --primary-light: #1a3568;
+            --accent: #e6b422;
+            --danger: #c0392b;
+            --bg: #f4f6f9;
+            --card: #ffffff;
+            --text: #2c3e50;
+            --border: #dcdde1;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--bg); color: var(--text);
             min-height: 100vh; display: flex; flex-direction: column;
         }
         .header {
             background: linear-gradient(135deg, var(--primary) 0%, #0d2647 100%);
-            color: white; padding: 15px 30px; display: flex; align-items: center;
-            justify-content: space-between; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            color: white; padding: 15px 25px;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         .logo { display: flex; align-items: center; gap: 15px; }
-        .logo-icon { background: white; color: var(--primary); font-weight: 800; font-size: 28px; padding: 5px 15px; border-radius: 6px; }
+        .logo-icon {
+            background: white; color: var(--primary);
+            font-weight: 800; font-size: 24px; padding: 5px 15px;
+            border-radius: 6px; letter-spacing: 1px;
+        }
         .logo-text { font-size: 16px; line-height: 1.2; }
         .logo-text small { font-weight: 300; opacity: 0.9; }
         .user-info { display: flex; align-items: center; gap: 15px; }
         .btn {
-            background: var(--primary-light); color: white; border: none; padding: 8px 16px;
-            border-radius: 5px; cursor: pointer; font-size: 14px; transition: 0.2s;
+            background: var(--primary-light); color: white;
+            border: none; padding: 8px 16px; border-radius: 5px;
+            cursor: pointer; font-size: 14px; transition: 0.2s;
+            white-space: nowrap;
         }
         .btn:hover { background: var(--primary); }
-        .btn-accent { background: var(--accent); color: #000; }
+        .btn-accent { background: var(--accent); color: #000; font-weight: bold; }
         .btn-accent:hover { background: #d4a017; }
         .btn-danger { background: var(--danger); }
         .btn-danger:hover { background: #a71d2a; }
-        .container { max-width: 1100px; margin: 25px auto; padding: 0 20px; flex: 1; width: 100%; }
+        .container {
+            max-width: 1100px; margin: 25px auto;
+            padding: 0 20px; flex: 1; width: 100%;
+        }
         .card {
-            background: var(--card); border-radius: 10px; padding: 25px; margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            background: var(--card); border-radius: 10px; padding: 25px;
+            margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: 600; margin-bottom: 5px; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 5px; font-size: 14px; }
+        label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 14px; }
+        input, select, textarea {
+            width: 100%; padding: 10px; border: 1px solid var(--border);
+            border-radius: 5px; font-size: 14px; font-family: inherit;
+        }
         textarea { resize: vertical; }
-        .stats-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
-        .stat-box { flex: 1; min-width: 150px; background: #edf2f9; padding: 15px; border-radius: 8px; text-align: center; }
-        .stat-box h3 { font-size: 24px; margin-bottom: 5px; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .stats-row {
+            display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;
+        }
+        .stat-box {
+            flex: 1; min-width: 140px; background: #edf2f9;
+            padding: 15px; border-radius: 8px; text-align: center;
+        }
+        .stat-box strong { font-size: 15px; display: block; margin-bottom: 5px; }
+        table {
+            width: 100%; border-collapse: collapse; background: white;
+            border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
         th { background: var(--primary); color: white; padding: 12px; text-align: left; }
         td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+        tr:last-child td { border-bottom: none; }
         .hidden { display: none !important; }
-        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
-        .tab { padding: 8px 20px; cursor: pointer; border-radius: 5px 5px 0 0; background: #e9ecef; border: none; }
+        .nav-tabs {
+            display: flex; gap: 10px; margin-bottom: 20px;
+            border-bottom: 2px solid var(--border); padding-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 8px 18px; cursor: pointer; border-radius: 5px 5px 0 0;
+            background: #e9ecef; border: none; font-size: 14px;
+        }
         .tab.active { background: var(--primary); color: white; }
-        .error-message { color: red; font-size: 14px; margin-top: 5px; }
+        .error-message { color: red; font-size: 13px; margin-top: 5px; }
+        .success-message { color: green; font-size: 13px; margin-top: 5px; }
         @media (max-width: 600px) {
-            .header { flex-direction: column; gap: 10px; }
+            .header { flex-direction: column; align-items: flex-start; }
             .stats-row { flex-direction: column; }
+            table { font-size: 13px; }
         }
     </style>
 </head>
@@ -69,85 +107,146 @@
             <div class="logo-icon">АРПЛАСТ</div>
             <div class="logo-text">Стрейч плёнка<br><small>Арзамас</small></div>
         </div>
-        <div class="user-info" id="userInfoBlock">
+        <div class="user-info" id="userInfoBlock" style="display:none;">
             <span id="currentUserDisplay" style="font-weight:600;"></span>
             <button class="btn" id="logoutBtn" onclick="logout()">Выйти</button>
         </div>
     </header>
 
     <div class="container">
-        <!-- Экран входа -->
+        <!-- Страница входа -->
         <div id="loginPage" class="card" style="max-width:450px; margin:60px auto;">
             <h2 style="text-align:center; margin-bottom:20px;">Вход в систему</h2>
-            <div class="form-group"><label>Логин</label><input type="text" id="loginUsername" placeholder="Введите логин"></div>
-            <div class="form-group"><label>Пароль</label><input type="password" id="loginPassword" placeholder="Введите пароль"></div>
+            <div class="form-group">
+                <label>Логин</label>
+                <input type="text" id="loginUsername" placeholder="Введите логин" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="loginPassword" placeholder="Введите пароль" autocomplete="current-password">
+            </div>
             <div class="error-message" id="loginError"></div>
             <button class="btn" style="width:100%; margin-top:10px;" onclick="handleLogin()">Войти</button>
-            <p style="text-align:center; margin-top:15px; font-size:13px; color:#7f8c8d;">admin / admin</p>
+            <p style="text-align:center; margin-top:15px; font-size:13px; color:#7f8c8d;">
+                По умолчанию: <b>admin</b> / <b>admin</b>
+            </p>
         </div>
 
         <!-- Панель рабочего -->
         <div id="workerPage" class="hidden">
             <div class="nav-tabs">
-                <button class="tab active" onclick="switchWorkerTab('newRecord')">Новая запись</button>
-                <button class="tab" onclick="switchWorkerTab('myRecords')">Мои записи</button>
-                <button class="tab" onclick="switchWorkerTab('changePass')">Сменить пароль</button>
+                <button class="tab active" data-tab="newRecord">Новая запись</button>
+                <button class="tab" data-tab="myRecords">Мои записи</button>
+                <button class="tab" data-tab="changePass">Сменить пароль</button>
             </div>
+
+            <!-- Вкладка "Новая запись" -->
             <div id="workerNewRecord" class="card">
                 <h3>Запись за смену</h3>
-                <div class="form-group"><label>Дата</label><input type="date" id="recordDate"></div>
-                <div class="form-group"><label>Произведено (кг)</label><input type="number" id="produced" min="0" step="0.1" value="0"></div>
-                <div class="form-group"><label>Брак (кг)</label><input type="number" id="defect" min="0" step="0.1" value="0"></div>
-                <div class="form-group"><label>Причина брака</label><textarea id="defectReason" rows="2" placeholder="Опишите причину, если был брак"></textarea></div>
+                <div class="form-group">
+                    <label>Дата</label>
+                    <input type="date" id="recordDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Произведено (кг)</label>
+                    <input type="number" id="produced" min="0" step="0.1" value="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Брак (кг)</label>
+                    <input type="number" id="defect" min="0" step="0.1" value="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Причина брака</label>
+                    <textarea id="defectReason" rows="2" placeholder="Необязательно, если брака нет"></textarea>
+                </div>
                 <button class="btn btn-accent" onclick="saveRecord()">Сохранить запись</button>
                 <div id="recordMessage" class="error-message"></div>
             </div>
+
+            <!-- Вкладка "Мои записи" -->
             <div id="workerMyRecords" class="hidden card">
-                <h3>Статистика</h3>
+                <h3>Моя статистика</h3>
                 <div class="stats-row" id="workerStats"></div>
                 <h3 style="margin-top:20px;">Последние записи</h3>
-                <table><thead><tr><th>Дата</th><th>Произведено</th><th>Брак</th><th>Причина</th></tr></thead>
-                    <tbody id="workerRecordsTable"></tbody></table>
+                <table>
+                    <thead><tr><th>Дата</th><th>Произведено</th><th>Брак</th><th>Причина</th></tr></thead>
+                    <tbody id="workerRecordsTable"></tbody>
+                </table>
             </div>
+
+            <!-- Вкладка "Сменить пароль" -->
             <div id="workerChangePass" class="hidden card">
                 <h3>Смена пароля</h3>
-                <div class="form-group"><label>Новый пароль</label><input type="password" id="newWorkerPass"></div>
+                <div class="form-group">
+                    <label>Новый пароль</label>
+                    <input type="password" id="newWorkerPass" required>
+                </div>
                 <button class="btn" onclick="changeWorkerPassword()">Сменить</button>
                 <div id="changePassMsg" class="error-message"></div>
             </div>
         </div>
 
-        <!-- Админ-панель -->
+        <!-- Панель администратора -->
         <div id="adminPage" class="hidden">
             <div class="nav-tabs">
-                <button class="tab active" onclick="switchAdminTab('users')">Пользователи</button>
-                <button class="tab" onclick="switchAdminTab('addUser')">Добавить</button>
-                <button class="tab" onclick="switchAdminTab('allRecords')">Все записи</button>
-                <button class="tab" onclick="switchAdminTab('globalStats')">Статистика</button>
+                <button class="tab active" data-tab="users">Пользователи</button>
+                <button class="tab" data-tab="addUser">Добавить</button>
+                <button class="tab" data-tab="allRecords">Все записи</button>
+                <button class="tab" data-tab="globalStats">Статистика</button>
             </div>
+
             <div id="adminUsers" class="card">
                 <h3>Список пользователей</h3>
-                <table><thead><tr><th>Логин</th><th>Роль</th><th>Действие</th></tr></thead><tbody id="usersTableBody"></tbody></table>
+                <table>
+                    <thead><tr><th>Логин</th><th>Роль</th><th>Действие</th></tr></thead>
+                    <tbody id="usersTableBody"></tbody>
+                </table>
             </div>
+
             <div id="adminAddUser" class="hidden card">
                 <h3>Добавить пользователя</h3>
-                <div class="form-group"><label>Логин</label><input type="text" id="newUserLogin"></div>
-                <div class="form-group"><label>Пароль</label><input type="password" id="newUserPass"></div>
-                <div class="form-group"><label>Роль</label><select id="newUserRole"><option value="worker">Рабочий</option><option value="admin">Админ</option></select></div>
+                <div class="form-group">
+                    <label>Логин</label>
+                    <input type="text" id="newUserLogin" required>
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" id="newUserPass" required>
+                </div>
+                <div class="form-group">
+                    <label>Роль</label>
+                    <select id="newUserRole">
+                        <option value="worker">Рабочий</option>
+                        <option value="admin">Админ</option>
+                    </select>
+                </div>
                 <button class="btn" onclick="addUser()">Создать</button>
                 <div id="addUserMsg" class="error-message"></div>
             </div>
+
             <div id="adminAllRecords" class="hidden card">
                 <h3>Фильтр записей</h3>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
-                    <div class="form-group" style="flex:1; min-width:150px;"><label>С даты</label><input type="date" id="filterDateFrom"></div>
-                    <div class="form-group" style="flex:1; min-width:150px;"><label>По дату</label><input type="date" id="filterDateTo"></div>
-                    <div class="form-group" style="flex:1; min-width:150px;"><label>Пользователь</label><select id="filterUser"><option value="all">Все</option></select></div>
+                    <div class="form-group" style="flex:1; min-width:150px;">
+                        <label>С даты</label>
+                        <input type="date" id="filterDateFrom">
+                    </div>
+                    <div class="form-group" style="flex:1; min-width:150px;">
+                        <label>По дату</label>
+                        <input type="date" id="filterDateTo">
+                    </div>
+                    <div class="form-group" style="flex:1; min-width:150px;">
+                        <label>Пользователь</label>
+                        <select id="filterUser"><option value="all">Все</option></select>
+                    </div>
                     <button class="btn" style="height:40px;" onclick="loadAllRecords()">Показать</button>
                 </div>
-                <table style="margin-top:20px;"><thead><tr><th>Дата</th><th>Сотрудник</th><th>Произведено</th><th>Брак</th><th>Причина</th></tr></thead>
-                    <tbody id="allRecordsTable"></tbody></table>
+                <table style="margin-top:20px;">
+                    <thead><tr><th>Дата</th><th>Сотрудник</th><th>Произведено</th><th>Брак</th><th>Причина</th></tr></thead>
+                    <tbody id="allRecordsTable"></tbody>
+                </table>
             </div>
+
             <div id="adminGlobalStats" class="hidden card">
                 <h3>Общая статистика предприятия</h3>
                 <div class="stats-row" id="globalStatsRow"></div>
@@ -157,82 +256,47 @@
     </div>
 
     <script>
-        // ---------- КОНФИГУРАЦИЯ FIREBASE (ВСТАВЬТЕ СВОЙ КОНФИГ СЮДА) ----------
+        // ============ ЗАМЕНИТЕ ЭТОТ БЛОК НА ДАННЫЕ ИЗ FIREBASE ============
         const firebaseConfig = {
-            apiKey: "AIzaSyD12345-Lp9abcdef...", // ← ЗАМЕНИТЕ на свои данные
-            authDomain: "arplast-xxxx.firebaseapp.com",
-            databaseURL: "https://arplast-xxxx-default-rtdb.firebaseio.com",
-            projectId: "arplast-xxxx",
-            storageBucket: "arplast-xxxx.appspot.com",
-            messagingSenderId: "123456789012",
-            appId: "1:123456789012:web:abcdef123456"
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
-        // ---------- !!! ВАЖНО !!! ----------
+        // =================================================================
 
         // Инициализация Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Глобальные объекты для данных из Firebase (заполняются при старте)
-        let globalUsers = [];
-        let globalRecords = [];
+        // Глобальные кеши (обновляются при загрузке / изменении)
+        let users = [];
+        let records = [];
 
-        // ---------- Работа с Firebase ----------
-        function loadUsersFromDB() {
-            return db.ref('users').once('value').then(snapshot => {
-                globalUsers = snapshot.val() ? Object.values(snapshot.val()) : [];
-                // Если база пустая, создаём администратора по умолчанию
-                if (globalUsers.length === 0) {
-                    const defaultAdmin = { username: 'admin', password: 'admin', role: 'admin' };
-                    db.ref('users').push(defaultAdmin);
-                    globalUsers.push(defaultAdmin);
-                }
-                return globalUsers;
-            });
-        }
+        // Загрузка данных из Firebase при старте
+        async function loadData() {
+            const [usersSnap, recordsSnap] = await Promise.all([
+                db.ref('users').once('value'),
+                db.ref('records').once('value')
+            ]);
+            users = usersSnap.val() ? Object.values(usersSnap.val()) : [];
+            records = recordsSnap.val() ? Object.values(recordsSnap.val()) : [];
 
-        function loadRecordsFromDB() {
-            return db.ref('records').once('value').then(snapshot => {
-                globalRecords = snapshot.val() ? Object.values(snapshot.val()) : [];
-                return globalRecords;
-            });
-        }
-
-        function saveRecordToDB(record) {
-            // Удаляем старую запись этого же пользователя за ту же дату, если есть
-            db.ref('records').once('value').then(snapshot => {
-                const updates = {};
-                snapshot.forEach(child => {
-                    const val = child.val();
-                    if (val.username === record.username && val.date === record.date) {
-                        updates[child.key] = null; // помечаем на удаление
-                    }
+            // Создаём администратора по умолчанию, если база пуста
+            if (users.length === 0) {
+                await db.ref('users').push({
+                    username: 'admin',
+                    password: 'admin',
+                    role: 'admin'
                 });
-                updates[db.ref('records').push().key] = record;
-                return db.ref('records').update(updates);
-            });
+                users.push({ username: 'admin', password: 'admin', role: 'admin' });
+            }
         }
 
-        function deleteUserFromDB(username) {
-            db.ref('users').once('value').then(snapshot => {
-                const updates = {};
-                snapshot.forEach(child => {
-                    if (child.val().username === username) updates[child.key] = null;
-                });
-                return db.ref('users').update(updates);
-            }).then(() => {
-                // Удаляем записи этого пользователя
-                db.ref('records').once('value').then(snapshot => {
-                    const updates = {};
-                    snapshot.forEach(child => {
-                        if (child.val().username === username) updates[child.key] = null;
-                    });
-                    return db.ref('records').update(updates);
-                });
-            });
-        }
-
-        // ---------- Авторизация ----------
+        // Текущая сессия (храним в sessionStorage, чтобы после перезагрузки не вылетать)
         let currentUser = null;
         const loginPage = document.getElementById('loginPage');
         const workerPage = document.getElementById('workerPage');
@@ -240,49 +304,57 @@
         const userInfoBlock = document.getElementById('userInfoBlock');
         const currentUserDisplay = document.getElementById('currentUserDisplay');
 
-        window.onload = function() {
-            // Загружаем данные из Firebase
-            Promise.all([loadUsersFromDB(), loadRecordsFromDB()]).then(() => {
-                // Проверяем, есть ли ранее вошедший пользователь (храним в sessionStorage)
-                const savedUser = sessionStorage.getItem('currentUser');
-                if (savedUser) {
-                    currentUser = JSON.parse(savedUser);
-                    showLoggedInUI();
-                } else {
-                    showLoginUI();
+        // Инициализация приложения
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadData();
+            const savedUser = sessionStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                // Убедимся, что такой пользователь ещё есть в базе
+                if (!users.some(u => u.username === currentUser.username && u.role === currentUser.role)) {
+                    sessionStorage.removeItem('currentUser');
+                    currentUser = null;
                 }
-            });
-        };
+            }
+            updateUI();
+        });
 
-        function showLoginUI() {
-            loginPage.classList.remove('hidden');
-            workerPage.classList.add('hidden');
-            adminPage.classList.add('hidden');
-            userInfoBlock.classList.add('hidden');
-        }
-
-        function showLoggedInUI() {
-            loginPage.classList.add('hidden');
-            userInfoBlock.classList.remove('hidden');
-            currentUserDisplay.textContent = currentUser.username + (currentUser.role === 'admin' ? ' (админ)' : ' (рабочий)');
-            if (currentUser.role === 'admin') {
-                adminPage.classList.remove('hidden');
-                workerPage.classList.add('hidden');
-                loadUsersTable();
-                loadAdminFilterUsers();
+        function updateUI() {
+            if (currentUser) {
+                loginPage.classList.add('hidden');
+                userInfoBlock.style.display = 'flex';
+                currentUserDisplay.textContent = currentUser.username + 
+                    (currentUser.role === 'admin' ? ' (администратор)' : ' (рабочий)');
+                if (currentUser.role === 'admin') {
+                    adminPage.classList.remove('hidden');
+                    workerPage.classList.add('hidden');
+                    renderAdminUsers();
+                    populateUserFilter();
+                    switchAdminTab('users'); // активная вкладка по умолчанию
+                } else {
+                    workerPage.classList.remove('hidden');
+                    adminPage.classList.add('hidden');
+                    document.getElementById('recordDate').valueAsDate = new Date();
+                    switchWorkerTab('newRecord');
+                }
             } else {
-                workerPage.classList.remove('hidden');
+                loginPage.classList.remove('hidden');
+                workerPage.classList.add('hidden');
                 adminPage.classList.add('hidden');
-                document.getElementById('recordDate').valueAsDate = new Date();
-                refreshWorkerData();
+                userInfoBlock.style.display = 'none';
             }
         }
 
+        // ---------- АВТОРИЗАЦИЯ ----------
         function handleLogin() {
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value;
-            const user = globalUsers.find(u => u.username === username && u.password === password);
             const errorEl = document.getElementById('loginError');
+            if (!username || !password) {
+                errorEl.textContent = 'Введите логин и пароль';
+                return;
+            }
+            const user = users.find(u => u.username === username && u.password === password);
             if (!user) {
                 errorEl.textContent = 'Неверный логин или пароль';
                 return;
@@ -290,208 +362,374 @@
             currentUser = user;
             sessionStorage.setItem('currentUser', JSON.stringify(user));
             errorEl.textContent = '';
-            showLoggedInUI();
+            updateUI();
         }
 
         function logout() {
             sessionStorage.removeItem('currentUser');
-            location.reload();
+            currentUser = null;
+            updateUI();
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
         }
 
-        // ---------- Функции рабочего ----------
-        function saveRecord() {
+        // ---------- РАБОЧИЙ: НОВАЯ ЗАПИСЬ ----------
+        async function saveRecord() {
             const date = document.getElementById('recordDate').value;
             const produced = parseFloat(document.getElementById('produced').value) || 0;
             const defect = parseFloat(document.getElementById('defect').value) || 0;
             const reason = document.getElementById('defectReason').value.trim();
-            const msg = document.getElementById('recordMessage');
-            if (!date) { msg.textContent = 'Выберите дату'; return; }
-            const record = {
+            const msgEl = document.getElementById('recordMessage');
+            msgEl.textContent = '';
+
+            if (!date) {
+                msgEl.textContent = 'Выберите дату';
+                return;
+            }
+            if (produced < 0 || defect < 0) {
+                msgEl.textContent = 'Нельзя вводить отрицательные числа';
+                return;
+            }
+
+            const newRecord = {
                 username: currentUser.username,
                 date: date,
                 produced: produced,
                 defect: defect,
                 reason: reason
             };
-            saveRecordToDB(record).then(() => {
-                msg.textContent = '';
-                alert('Запись сохранена!');
-                return loadRecordsFromDB(); // Обновляем локальный кеш
-            }).then(() => {
+
+            try {
+                // Удаляем все предыдущие записи этого пользователя за эту же дату
+                const existingRecordsSnapshot = await db.ref('records')
+                    .orderByChild('date')
+                    .equalTo(date)
+                    .once('value');
+
+                const updates = {};
+                existingRecordsSnapshot.forEach(child => {
+                    if (child.val().username === currentUser.username) {
+                        updates[child.key] = null;
+                    }
+                });
+
+                // Добавляем новую запись
+                const newKey = db.ref('records').push().key;
+                updates[newKey] = newRecord;
+
+                await db.ref('records').update(updates);
+                // Обновляем локальный кеш
+                records = records.filter(r => !(r.username === currentUser.username && r.date === date));
+                records.push(newRecord);
+
+                msgEl.textContent = '';
+                msgEl.className = 'success-message';
+                msgEl.textContent = 'Запись сохранена!';
+                setTimeout(() => { msgEl.textContent = ''; }, 3000);
+
+                // Обновляем статистику сразу
                 refreshWorkerData();
-            });
+            } catch (error) {
+                msgEl.textContent = 'Ошибка сохранения. Проверьте соединение.';
+                console.error(error);
+            }
         }
 
+        // ---------- РАБОЧИЙ: МОИ ЗАПИСИ ----------
         function refreshWorkerData() {
             loadWorkerStats();
             loadWorkerRecordsTable();
         }
 
         function loadWorkerStats() {
-            const records = globalRecords.filter(r => r.username === currentUser.username);
+            const myRecords = records.filter(r => r.username === currentUser.username);
             const today = new Date().toISOString().split('T')[0];
-            const weekAgo = new Date(Date.now() - 6*86400000).toISOString().split('T')[0];
-            const monthStart = today.slice(0,7) + '-01';
-            const dayRec = records.filter(r => r.date === today);
-            const weekRec = records.filter(r => r.date >= weekAgo);
-            const monthRec = records.filter(r => r.date >= monthStart);
+            const weekAgo = new Date(Date.now() - 6 * 86400000).toISOString().split('T')[0];
+            const monthStart = today.slice(0, 7) + '-01';
+
+            const dayRec = myRecords.filter(r => r.date === today);
+            const weekRec = myRecords.filter(r => r.date >= weekAgo);
+            const monthRec = myRecords.filter(r => r.date >= monthStart);
+
             document.getElementById('workerStats').innerHTML = `
-                <div class="stat-box"><strong>Сегодня</strong><br>Произв: ${dayRec.reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${dayRec.reduce((s,r)=>s+r.defect,0)} кг</div>
-                <div class="stat-box"><strong>Неделя</strong><br>Произв: ${weekRec.reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${weekRec.reduce((s,r)=>s+r.defect,0)} кг</div>
-                <div class="stat-box"><strong>Месяц</strong><br>Произв: ${monthRec.reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${monthRec.reduce((s,r)=>s+r.defect,0)} кг</div>
+                <div class="stat-box">
+                    <strong>Сегодня</strong>
+                    Произведено: ${dayRec.reduce((s, r) => s + r.produced, 0)} кг<br>
+                    Брак: ${dayRec.reduce((s, r) => s + r.defect, 0)} кг
+                </div>
+                <div class="stat-box">
+                    <strong>Неделя (посл. 7 дн)</strong>
+                    Произведено: ${weekRec.reduce((s, r) => s + r.produced, 0)} кг<br>
+                    Брак: ${weekRec.reduce((s, r) => s + r.defect, 0)} кг
+                </div>
+                <div class="stat-box">
+                    <strong>Месяц</strong>
+                    Произведено: ${monthRec.reduce((s, r) => s + r.produced, 0)} кг<br>
+                    Брак: ${monthRec.reduce((s, r) => s + r.defect, 0)} кг
+                </div>
             `;
         }
 
         function loadWorkerRecordsTable() {
-            const records = globalRecords
+            const myRecords = records
                 .filter(r => r.username === currentUser.username)
-                .sort((a,b) => b.date.localeCompare(a.date))
+                .sort((a, b) => b.date.localeCompare(a.date) || a.reason?.localeCompare(b.reason || '') )
                 .slice(0, 20);
-            document.getElementById('workerRecordsTable').innerHTML = records.map(r =>
-                `<tr><td>${r.date}</td><td>${r.produced}</td><td>${r.defect}</td><td>${r.reason || ''}</td></tr>`
-            ).join('');
+            const tbody = document.getElementById('workerRecordsTable');
+            tbody.innerHTML = myRecords.length ? myRecords.map(r =>
+                `<tr>
+                    <td>${r.date}</td>
+                    <td>${r.produced}</td>
+                    <td>${r.defect}</td>
+                    <td>${r.reason || '-'}</td>
+                </tr>`
+            ).join('') : '<tr><td colspan="4" style="text-align:center;">Записей нет</td></tr>';
         }
 
-        function changeWorkerPassword() {
+        // ---------- СМЕНА ПАРОЛЯ (РАБОЧИЙ) ----------
+        async function changeWorkerPassword() {
             const newPass = document.getElementById('newWorkerPass').value.trim();
-            const msg = document.getElementById('changePassMsg');
-            if (!newPass) { msg.textContent = 'Введите пароль'; return; }
-            // Обновляем в Firebase
-            db.ref('users').once('value').then(snapshot => {
+            const msgEl = document.getElementById('changePassMsg');
+            if (!newPass) {
+                msgEl.textContent = 'Введите новый пароль';
+                return;
+            }
+            if (newPass.length < 3) {
+                msgEl.textContent = 'Пароль должен быть не менее 3 символов';
+                return;
+            }
+            try {
+                const snapshot = await db.ref('users').once('value');
                 const updates = {};
                 snapshot.forEach(child => {
                     if (child.val().username === currentUser.username) {
                         updates[child.key + '/password'] = newPass;
                     }
                 });
-                return db.ref('users').update(updates);
-            }).then(() => {
+                await db.ref('users').update(updates);
+                // Обновляем кеш и сессию
                 currentUser.password = newPass;
                 sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-                msg.textContent = 'Пароль изменён';
+                users.find(u => u.username === currentUser.username).password = newPass;
+                msgEl.textContent = '';
+                msgEl.className = 'success-message';
+                msgEl.textContent = 'Пароль успешно изменён';
                 document.getElementById('newWorkerPass').value = '';
-            });
+                setTimeout(() => { msgEl.textContent = ''; }, 3000);
+            } catch (e) {
+                msgEl.textContent = 'Ошибка. Попробуйте позже.';
+                console.error(e);
+            }
         }
 
-        function switchWorkerTab(tab) {
+        // ---------- ВКЛАДКИ РАБОЧЕГО ----------
+        function switchWorkerTab(tabName) {
             document.getElementById('workerNewRecord').classList.add('hidden');
             document.getElementById('workerMyRecords').classList.add('hidden');
             document.getElementById('workerChangePass').classList.add('hidden');
             document.querySelectorAll('#workerPage .tab').forEach(t => t.classList.remove('active'));
-            if (tab === 'newRecord') {
+
+            if (tabName === 'newRecord') {
                 document.getElementById('workerNewRecord').classList.remove('hidden');
-                document.querySelectorAll('#workerPage .tab')[0].classList.add('active');
-            } else if (tab === 'myRecords') {
+                document.querySelector('#workerPage .tab[data-tab="newRecord"]').classList.add('active');
+                document.getElementById('recordDate').valueAsDate = new Date();
+            } else if (tabName === 'myRecords') {
                 document.getElementById('workerMyRecords').classList.remove('hidden');
-                document.querySelectorAll('#workerPage .tab')[1].classList.add('active');
+                document.querySelector('#workerPage .tab[data-tab="myRecords"]').classList.add('active');
                 refreshWorkerData();
-            } else if (tab === 'changePass') {
+            } else if (tabName === 'changePass') {
                 document.getElementById('workerChangePass').classList.remove('hidden');
-                document.querySelectorAll('#workerPage .tab')[2].classList.add('active');
+                document.querySelector('#workerPage .tab[data-tab="changePass"]').classList.add('active');
             }
         }
 
-        // ---------- Функции админа ----------
-        function loadUsersTable() {
+        // Делегирование кликов по вкладкам
+        document.querySelector('#workerPage .nav-tabs').addEventListener('click', e => {
+            if (e.target.classList.contains('tab')) {
+                switchWorkerTab(e.target.dataset.tab);
+            }
+        });
+
+        // ---------- АДМИН: ПОЛЬЗОВАТЕЛИ ----------
+        function renderAdminUsers() {
             const tbody = document.getElementById('usersTableBody');
-            tbody.innerHTML = globalUsers.map(u =>
+            tbody.innerHTML = users.map(u =>
                 `<tr>
                     <td>${u.username}</td>
                     <td>${u.role === 'admin' ? 'Администратор' : 'Рабочий'}</td>
-                    <td>${u.username !== 'admin' ? `<button class="btn btn-danger" onclick="deleteUser('${u.username}')">Удалить</button>` : ''}</td>
+                    <td>${u.username !== 'admin' ? 
+                        `<button class="btn btn-danger" onclick="deleteUser('${u.username}')">Удалить</button>` : 
+                        '<span style="color:gray;">Системный</span>'}
+                    </td>
                 </tr>`
             ).join('');
         }
 
-        function deleteUser(username) {
-            if (confirm(`Удалить пользователя ${username}?`)) {
-                deleteUserFromDB(username).then(() => {
-                    return Promise.all([loadUsersFromDB(), loadRecordsFromDB()]);
-                }).then(() => {
-                    loadUsersTable();
-                    loadAdminFilterUsers();
+        async function deleteUser(username) {
+            if (!confirm(`Удалить пользователя "${username}" и все его записи?`)) return;
+            try {
+                // Удаляем из users
+                const usersSnapshot = await db.ref('users').once('value');
+                const updates = {};
+                usersSnapshot.forEach(child => {
+                    if (child.val().username === username) updates[child.key] = null;
                 });
+                await db.ref('users').update(updates);
+
+                // Удаляем его записи
+                const recordsSnapshot = await db.ref('records').once('value');
+                const recordUpdates = {};
+                recordsSnapshot.forEach(child => {
+                    if (child.val().username === username) recordUpdates[child.key] = null;
+                });
+                await db.ref('records').update(recordUpdates);
+
+                // Обновляем кеш
+                users = users.filter(u => u.username !== username);
+                records = records.filter(r => r.username !== username);
+
+                renderAdminUsers();
+                populateUserFilter();
+            } catch (e) {
+                alert('Ошибка удаления: ' + e.message);
+                console.error(e);
             }
         }
 
-        function addUser() {
+        // ---------- АДМИН: ДОБАВИТЬ ПОЛЬЗОВАТЕЛЯ ----------
+        async function addUser() {
             const login = document.getElementById('newUserLogin').value.trim();
             const pass = document.getElementById('newUserPass').value.trim();
             const role = document.getElementById('newUserRole').value;
-            const msg = document.getElementById('addUserMsg');
-            if (!login || !pass) { msg.textContent = 'Заполните поля'; return; }
-            if (globalUsers.find(u => u.username === login)) {
-                msg.textContent = 'Пользователь уже существует';
+            const msgEl = document.getElementById('addUserMsg');
+            msgEl.textContent = '';
+
+            if (!login || !pass) {
+                msgEl.textContent = 'Заполните логин и пароль';
                 return;
             }
-            const newUser = { username: login, password: pass, role: role };
-            db.ref('users').push(newUser).then(() => {
-                return loadUsersFromDB();
-            }).then(() => {
-                msg.textContent = 'Пользователь создан';
+            if (login.length < 3 || pass.length < 3) {
+                msgEl.textContent = 'Логин и пароль должны быть не менее 3 символов';
+                return;
+            }
+            if (users.some(u => u.username === login)) {
+                msgEl.textContent = 'Пользователь с таким логином уже есть';
+                return;
+            }
+
+            try {
+                const newUser = { username: login, password: pass, role: role };
+                await db.ref('users').push(newUser);
+                users.push(newUser);
+                msgEl.textContent = '';
+                msgEl.className = 'success-message';
+                msgEl.textContent = 'Пользователь создан';
                 document.getElementById('newUserLogin').value = '';
                 document.getElementById('newUserPass').value = '';
-                loadUsersTable();
-                loadAdminFilterUsers();
-            });
+                renderAdminUsers();
+                populateUserFilter();
+                setTimeout(() => { msgEl.textContent = ''; }, 3000);
+            } catch (e) {
+                msgEl.textContent = 'Ошибка создания пользователя';
+                console.error(e);
+            }
         }
 
-        function loadAdminFilterUsers() {
+        function populateUserFilter() {
             const select = document.getElementById('filterUser');
             select.innerHTML = '<option value="all">Все</option>' +
-                globalUsers.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
+                users.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
         }
 
+        // ---------- АДМИН: ВСЕ ЗАПИСИ ----------
         function loadAllRecords() {
             const dateFrom = document.getElementById('filterDateFrom').value;
             const dateTo = document.getElementById('filterDateTo').value;
             const userFilter = document.getElementById('filterUser').value;
-            let records = globalRecords.slice();
-            if (dateFrom) records = records.filter(r => r.date >= dateFrom);
-            if (dateTo) records = records.filter(r => r.date <= dateTo);
-            if (userFilter !== 'all') records = records.filter(r => r.username === userFilter);
-            records.sort((a,b) => b.date.localeCompare(a.date));
-            document.getElementById('allRecordsTable').innerHTML = records.map(r =>
-                `<tr><td>${r.date}</td><td>${r.username}</td><td>${r.produced}</td><td>${r.defect}</td><td>${r.reason || ''}</td></tr>`
-            ).join('');
+
+            let filtered = [...records];
+            if (dateFrom) filtered = filtered.filter(r => r.date >= dateFrom);
+            if (dateTo) filtered = filtered.filter(r => r.date <= dateTo);
+            if (userFilter !== 'all') filtered = filtered.filter(r => r.username === userFilter);
+
+            filtered.sort((a, b) => b.date.localeCompare(a.date) || a.username.localeCompare(b.username));
+
+            const tbody = document.getElementById('allRecordsTable');
+            tbody.innerHTML = filtered.length ? filtered.map(r =>
+                `<tr>
+                    <td>${r.date}</td>
+                    <td>${r.username}</td>
+                    <td>${r.produced}</td>
+                    <td>${r.defect}</td>
+                    <td>${r.reason || '-'}</td>
+                </tr>`
+            ).join('') : '<tr><td colspan="5" style="text-align:center;">Нет записей</td></tr>';
         }
 
+        // ---------- АДМИН: ГЛОБАЛЬНАЯ СТАТИСТИКА ----------
         function loadGlobalStats() {
-            const records = globalRecords;
             const today = new Date().toISOString().split('T')[0];
-            const weekAgo = new Date(Date.now() - 6*86400000).toISOString().split('T')[0];
-            const monthStart = today.slice(0,7) + '-01';
+            const weekAgo = new Date(Date.now() - 6 * 86400000).toISOString().split('T')[0];
+            const monthStart = today.slice(0, 7) + '-01';
+
+            const todayRecords = records.filter(r => r.date === today);
+            const weekRecords = records.filter(r => r.date >= weekAgo);
+            const monthRecords = records.filter(r => r.date >= monthStart);
+
             document.getElementById('globalStatsRow').innerHTML = `
-                <div class="stat-box"><strong>Сегодня (все)</strong><br>Произв: ${records.filter(r=>r.date===today).reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${records.filter(r=>r.date===today).reduce((s,r)=>s+r.defect,0)} кг</div>
-                <div class="stat-box"><strong>Неделя (все)</strong><br>Произв: ${records.filter(r=>r.date>=weekAgo).reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${records.filter(r=>r.date>=weekAgo).reduce((s,r)=>s+r.defect,0)} кг</div>
-                <div class="stat-box"><strong>Месяц (все)</strong><br>Произв: ${records.filter(r=>r.date>=monthStart).reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${records.filter(r=>r.date>=monthStart).reduce((s,r)=>s+r.defect,0)} кг</div>
+                <div class="stat-box">
+                    <strong>Сегодня</strong>
+                    Произведено: ${todayRecords.reduce((s, r) => s + r.produced, 0)} кг<br>
+                    Брак: ${todayRecords.reduce((s, r) => s + r.defect, 0)} кг
+                </div>
+                <div class="stat-box">
+                    <strong>Неделя (посл. 7 дн)</strong>
+                    Произведено: ${weekRecords.reduce((s, r) => s + r.produced, 0)} кг<br>
+                    Брак: ${weekRecords.reduce((s, r) => s + r.defect, 0)} кг
+                </div>
+                <div class="stat-box">
+                    <strong>Месяц</strong>
+                    Произведено: ${monthRecords.reduce((s, r) => s + r.produced, 0)} кг<br>
+                    Брак: ${monthRecords.reduce((s, r) => s + r.defect, 0)} кг
+                </div>
             `;
         }
 
-        function switchAdminTab(tab) {
+        // ---------- ВКЛАДКИ АДМИНА ----------
+        function switchAdminTab(tabName) {
             document.getElementById('adminUsers').classList.add('hidden');
             document.getElementById('adminAddUser').classList.add('hidden');
             document.getElementById('adminAllRecords').classList.add('hidden');
             document.getElementById('adminGlobalStats').classList.add('hidden');
             document.querySelectorAll('#adminPage .tab').forEach(t => t.classList.remove('active'));
-            if (tab === 'users') {
-                document.getElementById('adminUsers').classList.remove('hidden');
-                document.querySelectorAll('#adminPage .tab')[0].classList.add('active');
-                loadUsersTable();
-            } else if (tab === 'addUser') {
-                document.getElementById('adminAddUser').classList.remove('hidden');
-                document.querySelectorAll('#adminPage .tab')[1].classList.add('active');
-            } else if (tab === 'allRecords') {
-                document.getElementById('adminAllRecords').classList.remove('hidden');
-                document.querySelectorAll('#adminPage .tab')[2].classList.add('active');
-                loadAdminFilterUsers();
-                loadAllRecords();
-            } else if (tab === 'globalStats') {
-                document.getElementById('adminGlobalStats').classList.remove('hidden');
-                document.querySelectorAll('#adminPage .tab')[3].classList.add('active');
-                loadGlobalStats();
+
+            const tabMap = {
+                users: 'adminUsers',
+                addUser: 'adminAddUser',
+                allRecords: 'adminAllRecords',
+                globalStats: 'adminGlobalStats'
+            };
+            document.getElementById(tabMap[tabName]).classList.remove('hidden');
+            document.querySelector(`#adminPage .tab[data-tab="${tabName}"]`).classList.add('active');
+
+            if (tabName === 'users') renderAdminUsers();
+            if (tabName === 'allRecords') loadAllRecords();
+            if (tabName === 'globalStats') loadGlobalStats();
+        }
+
+        document.querySelector('#adminPage .nav-tabs').addEventListener('click', e => {
+            if (e.target.classList.contains('tab')) {
+                switchAdminTab(e.target.dataset.tab);
             }
-        }  
+        });
+
+        // Обработчик Enter на странице входа
+        document.getElementById('loginPassword').addEventListener('keypress', e => {
+            if (e.key === 'Enter') handleLogin();
+        });
+        document.getElementById('loginUsername').addEventListener('keypress', e => {
+            if (e.key === 'Enter') document.getElementById('loginPassword').focus();
+        });
     </script>
 </body>
 </html>

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>АРПЛАСТ — Складской учёт</title>
-    <!-- Firebase -->
+    <title>АРПЛАСТ — Складской учёт (облако)</title>
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
@@ -109,21 +109,19 @@
         </div>
         <div class="user-info" id="userInfoBlock" style="display:none;">
             <span id="currentUserDisplay" style="font-weight:600;"></span>
-            <button class="btn" onclick="logout()">Выйти</button>
+            <button class="btn" id="logoutBtn" onclick="logout()">Выйти</button>
         </div>
     </header>
 
     <div class="container">
-        <!-- Экран входа -->
+        <!-- Страница входа -->
         <div id="loginPage" class="card" style="max-width:450px; margin:60px auto;">
             <h2 style="text-align:center; margin-bottom:20px;">Вход в систему</h2>
             <div class="form-group"><label>Логин</label><input type="text" id="loginUsername" placeholder="Введите логин"></div>
             <div class="form-group"><label>Пароль</label><input type="password" id="loginPassword" placeholder="Введите пароль"></div>
             <div class="error-message" id="loginError"></div>
             <button class="btn" style="width:100%; margin-top:10px;" onclick="handleLogin()">Войти</button>
-            <p style="text-align:center; margin-top:15px; font-size:13px; color:#7f8c8d;">
-                По умолчанию: <b>admin</b> / <b>admin</b>
-            </p>
+            <p style="text-align:center; margin-top:15px;">По умолчанию: <b>admin</b> / <b>admin</b></p>
         </div>
 
         <!-- Панель рабочего -->
@@ -135,9 +133,9 @@
             </div>
             <div id="workerNewRecord" class="card">
                 <h3>Запись за смену</h3>
-                <div class="form-group"><label>Дата</label><input type="date" id="recordDate"></div>
-                <div class="form-group"><label>Произведено (кг)</label><input type="number" id="produced" min="0" step="0.1" value="0"></div>
-                <div class="form-group"><label>Брак (кг)</label><input type="number" id="defect" min="0" step="0.1" value="0"></div>
+                <div class="form-group"><label>Дата</label><input type="date" id="recordDate" required></div>
+                <div class="form-group"><label>Произведено (кг)</label><input type="number" id="produced" min="0" step="0.1" value="0" required></div>
+                <div class="form-group"><label>Брак (кг)</label><input type="number" id="defect" min="0" step="0.1" value="0" required></div>
                 <div class="form-group"><label>Причина брака</label><textarea id="defectReason" rows="2"></textarea></div>
                 <button class="btn btn-accent" onclick="saveRecord()">Сохранить запись</button>
                 <div id="recordMessage" class="error-message"></div>
@@ -145,18 +143,19 @@
             <div id="workerMyRecords" class="hidden card">
                 <h3>Моя статистика</h3>
                 <div class="stats-row" id="workerStats"></div>
-                <h3>Последние записи</h3>
-                <table><thead><tr><th>Дата</th><th>Произведено</th><th>Брак</th><th>Причина</th></tr></thead><tbody id="workerRecordsTable"></tbody></table>
+                <h3 style="margin-top:20px;">Последние записи</h3>
+                <table><thead><tr><th>Дата</th><th>Произведено</th><th>Брак</th><th>Причина</th></tr></thead>
+                    <tbody id="workerRecordsTable"></tbody></table>
             </div>
             <div id="workerChangePass" class="hidden card">
                 <h3>Смена пароля</h3>
-                <div class="form-group"><label>Новый пароль</label><input type="password" id="newWorkerPass"></div>
+                <div class="form-group"><label>Новый пароль</label><input type="password" id="newWorkerPass" required></div>
                 <button class="btn" onclick="changeWorkerPassword()">Сменить</button>
                 <div id="changePassMsg" class="error-message"></div>
             </div>
         </div>
 
-        <!-- Админ-панель -->
+        <!-- Панель администратора -->
         <div id="adminPage" class="hidden">
             <div class="nav-tabs">
                 <button class="tab active" data-tab="users">Пользователи</button>
@@ -170,8 +169,8 @@
             </div>
             <div id="adminAddUser" class="hidden card">
                 <h3>Добавить пользователя</h3>
-                <div class="form-group"><label>Логин</label><input type="text" id="newUserLogin"></div>
-                <div class="form-group"><label>Пароль</label><input type="password" id="newUserPass"></div>
+                <div class="form-group"><label>Логин</label><input type="text" id="newUserLogin" required></div>
+                <div class="form-group"><label>Пароль</label><input type="password" id="newUserPass" required></div>
                 <div class="form-group"><label>Роль</label><select id="newUserRole"><option value="worker">Рабочий</option><option value="admin">Админ</option></select></div>
                 <button class="btn" onclick="addUser()">Создать</button>
                 <div id="addUserMsg" class="error-message"></div>
@@ -182,12 +181,13 @@
                     <div class="form-group" style="flex:1; min-width:150px;"><label>С даты</label><input type="date" id="filterDateFrom"></div>
                     <div class="form-group" style="flex:1; min-width:150px;"><label>По дату</label><input type="date" id="filterDateTo"></div>
                     <div class="form-group" style="flex:1; min-width:150px;"><label>Пользователь</label><select id="filterUser"><option value="all">Все</option></select></div>
-                    <button class="btn" onclick="loadAllRecords()">Показать</button>
+                    <button class="btn" style="height:40px;" onclick="loadAllRecords()">Показать</button>
                 </div>
-                <table style="margin-top:20px;"><thead><tr><th>Дата</th><th>Сотрудник</th><th>Произведено</th><th>Брак</th><th>Причина</th></tr></thead><tbody id="allRecordsTable"></tbody></table>
+                <table style="margin-top:20px;"><thead><tr><th>Дата</th><th>Сотрудник</th><th>Произведено</th><th>Брак</th><th>Причина</th></tr></thead>
+                    <tbody id="allRecordsTable"></tbody></table>
             </div>
             <div id="adminGlobalStats" class="hidden card">
-                <h3>Общая статистика предприятия</h3>
+                <h3>Общая статистика</h3>
                 <div class="stats-row" id="globalStatsRow"></div>
                 <button class="btn" onclick="loadGlobalStats()">Обновить</button>
             </div>
@@ -195,58 +195,55 @@
     </div>
 
     <script>
-        // ⚠️ ЗАМЕНИТЕ ЗДЕСЬ НА СВОЙ КОНФИГ ИЗ FIREBASE
+        // ========== ВСТАВЬТЕ СЮДА СВОЙ FIREBASE КОНФИГ ==========
         const firebaseConfig = {
-            apiKey: "AIzaSy...",
-            authDomain: "ваш-проект.firebaseapp.com",
-            databaseURL: "https://ваш-проект-default-rtdb.firebaseio.com",
-            projectId: "ваш-проект",
-            storageBucket: "ваш-проект.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:..."
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
+        // ====================================================
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let usersCache = [];
-        let recordsCache = [];
-
-        // Загрузка данных из Firebase
-        async function loadCloudData() {
-            const [usersSnap, recordsSnap] = await Promise.all([
-                db.ref('users').once('value'),
-                db.ref('records').once('value')
-            ]);
-            usersCache = usersSnap.val() ? Object.values(usersSnap.val()) : [];
-            recordsCache = recordsSnap.val() ? Object.values(recordsSnap.val()) : [];
-
-            if (usersCache.length === 0) {
-                await db.ref('users').push({
-                    username: 'admin',
-                    password: 'admin',
-                    role: 'admin'
-                });
-                usersCache.push({ username: 'admin', password: 'admin', role: 'admin' });
-            }
-        }
-
         let currentUser = null;
+
+        // DOM элементы
         const loginPage = document.getElementById('loginPage');
         const workerPage = document.getElementById('workerPage');
         const adminPage = document.getElementById('adminPage');
         const userInfoBlock = document.getElementById('userInfoBlock');
         const currentUserDisplay = document.getElementById('currentUserDisplay');
 
+        // Загрузка данных при старте
         window.addEventListener('DOMContentLoaded', async () => {
-            await loadCloudData();
+            // Проверяем, есть ли сохранённая сессия
             const saved = sessionStorage.getItem('currentUser');
             if (saved) {
-                const parsed = JSON.parse(saved);
-                if (usersCache.some(u => u.username === parsed.username && u.role === parsed.role)) {
-                    currentUser = parsed;
+                currentUser = JSON.parse(saved);
+                // Убедимся, что такой пользователь существует в базе
+                const snap = await db.ref('users').orderByChild('username').equalTo(currentUser.username).once('value');
+                if (!snap.exists()) {
+                    // Пользователь был удалён из базы
+                    sessionStorage.removeItem('currentUser');
+                    currentUser = null;
                 }
             }
+
+            // Создаём admin/admin, если база пуста
+            const rootSnap = await db.ref('users').once('value');
+            if (!rootSnap.exists()) {
+                await db.ref('users').push({
+                    username: 'admin',
+                    password: 'admin',
+                    role: 'admin'
+                });
+            }
+
             updateUI();
         });
 
@@ -254,13 +251,11 @@
             if (currentUser) {
                 loginPage.classList.add('hidden');
                 userInfoBlock.style.display = 'flex';
-                currentUserDisplay.textContent = currentUser.username + (currentUser.role === 'admin' ? ' (администратор)' : ' (рабочий)');
+                currentUserDisplay.textContent = currentUser.username + (currentUser.role === 'admin' ? ' (администратор)' : '');
                 if (currentUser.role === 'admin') {
                     adminPage.classList.remove('hidden');
                     workerPage.classList.add('hidden');
-                    renderAdminUsers();
-                    populateUserFilter();
-                    switchAdminTab('users');
+                    refreshAdminData();
                 } else {
                     workerPage.classList.remove('hidden');
                     adminPage.classList.add('hidden');
@@ -275,118 +270,185 @@
             }
         }
 
-        function handleLogin() {
+        // ========== Авторизация ==========
+        async function handleLogin() {
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value;
-            const user = usersCache.find(u => u.username === username && u.password === password);
-            if (user) {
-                currentUser = user;
-                sessionStorage.setItem('currentUser', JSON.stringify(user));
+            const errorEl = document.getElementById('loginError');
+
+            if (!username || !password) {
+                errorEl.textContent = 'Введите логин и пароль';
+                return;
+            }
+
+            const snap = await db.ref('users').orderByChild('username').equalTo(username).once('value');
+            let foundUser = null;
+            snap.forEach(child => {
+                if (child.val().password === password) foundUser = child.val();
+            });
+
+            if (foundUser) {
+                currentUser = foundUser;
+                sessionStorage.setItem('currentUser', JSON.stringify(foundUser));
+                errorEl.textContent = '';
                 updateUI();
-                document.getElementById('loginError').textContent = '';
             } else {
-                document.getElementById('loginError').textContent = 'Неверный логин или пароль';
+                errorEl.textContent = 'Неверный логин или пароль';
             }
         }
 
         function logout() {
             sessionStorage.removeItem('currentUser');
-            currentUser = null;
-            updateUI();
+            location.reload();
         }
 
-        // ===== Рабочий =====
+        // ========== Функции рабочего ==========
         async function saveRecord() {
             const date = document.getElementById('recordDate').value;
-            const produced = +document.getElementById('produced').value || 0;
-            const defect = +document.getElementById('defect').value || 0;
+            const produced = parseFloat(document.getElementById('produced').value) || 0;
+            const defect = parseFloat(document.getElementById('defect').value) || 0;
             const reason = document.getElementById('defectReason').value.trim();
-            if (!date) return alert('Выберите дату');
-            const newRecord = { username: currentUser.username, date, produced, defect, reason };
-            // удаляем старую запись за эту дату
-            const snap = await db.ref('records').orderByChild('date').equalTo(date).once('value');
+            const msgEl = document.getElementById('recordMessage');
+            if (!date) {
+                msgEl.textContent = 'Выберите дату'; return;
+            }
+            if (produced < 0 || defect < 0) {
+                msgEl.textContent = 'Нельзя вводить отрицательные числа'; return;
+            }
+
+            // Удаляем старую запись за эту дату этого пользователя
+            const existing = await db.ref('records').orderByChild('date').equalTo(date).once('value');
             const updates = {};
-            snap.forEach(child => {
-                if (child.val().username === currentUser.username) updates[child.key] = null;
+            existing.forEach(child => {
+                if (child.val().username === currentUser.username) {
+                    updates[child.key] = null;
+                }
             });
-            updates[db.ref('records').push().key] = newRecord;
-            await db.ref('records').update(updates);
-            // обновить кеш
-            recordsCache = recordsCache.filter(r => !(r.username === currentUser.username && r.date === date));
-            recordsCache.push(newRecord);
-            refreshWorkerData();
-            showTempMessage('recordMessage', 'Запись сохранена', 'success');
+            const newKey = db.ref('records').push().key;
+            updates[newKey] = {
+                username: currentUser.username,
+                date: date,
+                produced: produced,
+                defect: defect,
+                reason: reason
+            };
+
+            try {
+                await db.ref('records').update(updates);
+                msgEl.textContent = '';
+                msgEl.className = 'success-message';
+                msgEl.textContent = 'Запись сохранена!';
+                setTimeout(() => { msgEl.textContent = ''; msgEl.className = 'error-message'; }, 3000);
+                refreshWorkerStats();
+            } catch (e) {
+                msgEl.textContent = 'Ошибка соединения';
+            }
         }
 
-        function refreshWorkerData() {
-            loadWorkerStats();
-            loadWorkerRecordsTable();
-        }
+        async function refreshWorkerStats() {
+            const snap = await db.ref('records').once('value');
+            const allRecords = [];
+            snap.forEach(child => allRecords.push(child.val()));
+            const myRecords = allRecords.filter(r => r.username === currentUser.username);
 
-        function loadWorkerStats() {
-            const my = recordsCache.filter(r => r.username === currentUser.username);
-            const today = new Date().toISOString().slice(0,10);
-            const weekAgo = new Date(Date.now()-6*86400000).toISOString().slice(0,10);
-            const monthStart = today.slice(0,7)+'-01';
+            const today = new Date().toISOString().split('T')[0];
+            const weekAgo = new Date(Date.now() - 6 * 86400000).toISOString().split('T')[0];
+            const monthStart = today.slice(0, 7) + '-01';
+
+            const todayRec = myRecords.filter(r => r.date === today);
+            const weekRec = myRecords.filter(r => r.date >= weekAgo);
+            const monthRec = myRecords.filter(r => r.date >= monthStart);
+
             document.getElementById('workerStats').innerHTML = `
-                <div class="stat-box"><strong>Сегодня</strong>Произв: ${my.filter(r=>r.date===today).reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${my.filter(r=>r.date===today).reduce((s,r)=>s+r.defect,0)} кг</div>
-                <div class="stat-box"><strong>Неделя</strong>Произв: ${my.filter(r=>r.date>=weekAgo).reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${my.filter(r=>r.date>=weekAgo).reduce((s,r)=>s+r.defect,0)} кг</div>
-                <div class="stat-box"><strong>Месяц</strong>Произв: ${my.filter(r=>r.date>=monthStart).reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${my.filter(r=>r.date>=monthStart).reduce((s,r)=>s+r.defect,0)} кг</div>
+                <div class="stat-box"><strong>Сегодня</strong>Произв: ${todayRec.reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${todayRec.reduce((s,r)=>s+r.defect,0)} кг</div>
+                <div class="stat-box"><strong>Неделя</strong>Произв: ${weekRec.reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${weekRec.reduce((s,r)=>s+r.defect,0)} кг</div>
+                <div class="stat-box"><strong>Месяц</strong>Произв: ${monthRec.reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${monthRec.reduce((s,r)=>s+r.defect,0)} кг</div>
             `;
-        }
 
-        function loadWorkerRecordsTable() {
-            const my = recordsCache.filter(r => r.username === currentUser.username).sort((a,b)=>b.date.localeCompare(a.date));
-            document.getElementById('workerRecordsTable').innerHTML = my.length
-                ? my.map(r=>`<tr><td>${r.date}</td><td>${r.produced}</td><td>${r.defect}</td><td>${r.reason||'-'}</td></tr>`).join('')
-                : '<tr><td colspan="4">Нет записей</td></tr>';
+            const sorted = myRecords.sort((a,b) => b.date.localeCompare(a.date)).slice(0, 20);
+            const tbody = document.getElementById('workerRecordsTable');
+            tbody.innerHTML = sorted.length ? sorted.map(r => 
+                `<tr><td>${r.date}</td><td>${r.produced}</td><td>${r.defect}</td><td>${r.reason || '-'}</td></tr>`
+            ).join('') : '<tr><td colspan="4">Нет записей</td></tr>';
         }
 
         async function changeWorkerPassword() {
             const newPass = document.getElementById('newWorkerPass').value.trim();
-            if (!newPass || newPass.length<3) return alert('Пароль от 3 символов');
-            const snap = await db.ref('users').once('value');
-            const updates = {};
-            snap.forEach(c => { if (c.val().username === currentUser.username) updates[c.key+'/password'] = newPass; });
-            await db.ref('users').update(updates);
-            currentUser.password = newPass;
-            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-            usersCache.find(u=>u.username===currentUser.username).password = newPass;
-            showTempMessage('changePassMsg', 'Пароль изменён', 'success');
+            const msgEl = document.getElementById('changePassMsg');
+            if (!newPass || newPass.length < 3) {
+                msgEl.textContent = 'Пароль не менее 3 символов'; return;
+            }
+            const snap = await db.ref('users').orderByChild('username').equalTo(currentUser.username).once('value');
+            let key = null;
+            snap.forEach(child => { key = child.key; });
+            if (key) {
+                await db.ref('users/' + key).update({ password: newPass });
+                currentUser.password = newPass;
+                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                msgEl.textContent = '';
+                msgEl.className = 'success-message';
+                msgEl.textContent = 'Пароль изменён!';
+                document.getElementById('newWorkerPass').value = '';
+                setTimeout(() => { msgEl.textContent = ''; }, 3000);
+            }
         }
 
         function switchWorkerTab(tab) {
-            ['workerNewRecord','workerMyRecords','workerChangePass'].forEach(id => document.getElementById(id).classList.add('hidden'));
-            document.querySelectorAll('#workerPage .tab').forEach(t=>t.classList.remove('active'));
-            document.getElementById('worker'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.remove('hidden');
-            document.querySelector(`#workerPage .tab[data-tab="${tab}"]`).classList.add('active');
-            if (tab === 'myRecords') refreshWorkerData();
+            document.querySelectorAll('#workerPage .card').forEach(c => c.classList.add('hidden'));
+            document.querySelectorAll('#workerPage .tab').forEach(t => t.classList.remove('active'));
+            if (tab === 'newRecord') {
+                document.getElementById('workerNewRecord').classList.remove('hidden');
+                document.querySelector('#workerPage .tab[data-tab="newRecord"]').classList.add('active');
+                document.getElementById('recordDate').valueAsDate = new Date();
+            } else if (tab === 'myRecords') {
+                document.getElementById('workerMyRecords').classList.remove('hidden');
+                document.querySelector('#workerPage .tab[data-tab="myRecords"]').classList.add('active');
+                refreshWorkerStats();
+            } else if (tab === 'changePass') {
+                document.getElementById('workerChangePass').classList.remove('hidden');
+                document.querySelector('#workerPage .tab[data-tab="changePass"]').classList.add('active');
+            }
         }
-        document.getElementById('workerPage').querySelector('.nav-tabs').addEventListener('click', e => {
-            if (e.target.classList.contains('tab')) switchWorkerTab(e.target.dataset.tab);
-        });
 
-        // ===== Админ =====
-        function renderAdminUsers() {
-            document.getElementById('usersTableBody').innerHTML = usersCache.map(u =>
-                `<tr><td>${u.username}</td><td>${u.role==='admin'?'Администратор':'Рабочий'}</td>
-                <td>${u.username!=='admin' ? `<button class="btn btn-danger" onclick="deleteUser('${u.username}')">Удалить</button>` : 'Системный'}</td></tr>`
-            ).join('');
+        // ========== Админ-панель ==========
+        async function refreshAdminData() {
+            await renderAdminUsers();
+            populateUserFilter();
+            switchAdminTab('users');
+        }
+
+        async function renderAdminUsers() {
+            const snap = await db.ref('users').once('value');
+            const users = [];
+            snap.forEach(child => users.push(child.val()));
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = users.map(u => `
+                <tr>
+                    <td>${u.username}</td>
+                    <td>${u.role === 'admin' ? 'Администратор' : 'Рабочий'}</td>
+                    <td>${u.username !== 'admin' ? 
+                        `<button class="btn btn-danger" onclick="deleteUser('${u.username}')">Удалить</button>` : 
+                        'Системный'}
+                    </td>
+                </tr>
+            `).join('');
         }
 
         async function deleteUser(username) {
-            if (!confirm(`Удалить ${username}?`)) return;
-            const usersSnap = await db.ref('users').once('value');
-            const updates = {};
-            usersSnap.forEach(c => { if (c.val().username === username) updates[c.key] = null; });
-            await db.ref('users').update(updates);
-            const recordsSnap = await db.ref('records').once('value');
-            const recUpdates = {};
-            recordsSnap.forEach(c => { if (c.val().username === username) recUpdates[c.key] = null; });
-            await db.ref('records').update(recUpdates);
-            usersCache = usersCache.filter(u => u.username !== username);
-            recordsCache = recordsCache.filter(r => r.username !== username);
-            renderAdminUsers();
+            if (!confirm(`Удалить пользователя ${username}?`)) return;
+            // Удаляем пользователя
+            const snapUsers = await db.ref('users').orderByChild('username').equalTo(username).once('value');
+            const userUpdates = {};
+            snapUsers.forEach(child => { userUpdates[child.key] = null; });
+            await db.ref('users').update(userUpdates);
+
+            // Удаляем его записи
+            const snapRecords = await db.ref('records').orderByChild('username').equalTo(username).once('value');
+            const recordUpdates = {};
+            snapRecords.forEach(child => { recordUpdates[child.key] = null; });
+            await db.ref('records').update(recordUpdates);
+
+            await renderAdminUsers();
             populateUserFilter();
         }
 
@@ -394,65 +456,103 @@
             const login = document.getElementById('newUserLogin').value.trim();
             const pass = document.getElementById('newUserPass').value.trim();
             const role = document.getElementById('newUserRole').value;
-            if (!login || !pass || login.length<3 || pass.length<3) return alert('Логин и пароль от 3 символов');
-            if (usersCache.some(u => u.username === login)) return alert('Такой логин уже есть');
-            await db.ref('users').push({ username: login, password: pass, role });
-            usersCache.push({ username: login, password: pass, role });
+            const msgEl = document.getElementById('addUserMsg');
+            if (!login || !pass || login.length < 3 || pass.length < 3) {
+                msgEl.textContent = 'Логин/пароль от 3 символов'; return;
+            }
+            const snap = await db.ref('users').orderByChild('username').equalTo(login).once('value');
+            if (snap.exists()) {
+                msgEl.textContent = 'Пользователь уже существует'; return;
+            }
+            await db.ref('users').push({ username: login, password: pass, role: role });
+            msgEl.textContent = '';
+            msgEl.className = 'success-message';
+            msgEl.textContent = 'Создан!';
             document.getElementById('newUserLogin').value = '';
             document.getElementById('newUserPass').value = '';
-            renderAdminUsers();
+            setTimeout(() => { msgEl.textContent = ''; }, 3000);
+            await renderAdminUsers();
             populateUserFilter();
-            showTempMessage('addUserMsg', 'Пользователь создан', 'success');
         }
 
-        function populateUserFilter() {
+        async function populateUserFilter() {
+            const snap = await db.ref('users').once('value');
+            const users = [];
+            snap.forEach(child => users.push(child.val()));
             const select = document.getElementById('filterUser');
-            select.innerHTML = '<option value="all">Все</option>' + usersCache.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
+            select.innerHTML = '<option value="all">Все</option>' +
+                users.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
         }
 
-        function loadAllRecords() {
-            const from = document.getElementById('filterDateFrom').value;
-            const to = document.getElementById('filterDateTo').value;
-            const user = document.getElementById('filterUser').value;
-            let filtered = [...recordsCache];
-            if (from) filtered = filtered.filter(r => r.date >= from);
-            if (to) filtered = filtered.filter(r => r.date <= to);
-            if (user !== 'all') filtered = filtered.filter(r => r.username === user);
+        async function loadAllRecords() {
+            const dateFrom = document.getElementById('filterDateFrom').value;
+            const dateTo = document.getElementById('filterDateTo').value;
+            const userFilter = document.getElementById('filterUser').value;
+            const snap = await db.ref('records').once('value');
+            const records = [];
+            snap.forEach(child => records.push(child.val()));
+            let filtered = records;
+            if (dateFrom) filtered = filtered.filter(r => r.date >= dateFrom);
+            if (dateTo) filtered = filtered.filter(r => r.date <= dateTo);
+            if (userFilter !== 'all') filtered = filtered.filter(r => r.username === userFilter);
             filtered.sort((a,b) => b.date.localeCompare(a.date) || a.username.localeCompare(b.username));
-            document.getElementById('allRecordsTable').innerHTML = filtered.length
-                ? filtered.map(r => `<tr><td>${r.date}</td><td>${r.username}</td><td>${r.produced}</td><td>${r.defect}</td><td>${r.reason||'-'}</td></tr>`).join('')
-                : '<tr><td colspan="5">Нет записей</td></tr>';
+            const tbody = document.getElementById('allRecordsTable');
+            tbody.innerHTML = filtered.length ? filtered.map(r =>
+                `<tr><td>${r.date}</td><td>${r.username}</td><td>${r.produced}</td><td>${r.defect}</td><td>${r.reason || '-'}</td></tr>`
+            ).join('') : '<tr><td colspan="5">Нет записей</td></tr>';
         }
 
-        function loadGlobalStats() {
-            const today = new Date().toISOString().slice(0,10);
-            const weekAgo = new Date(Date.now()-6*86400000).toISOString().slice(0,10);
-            const monthStart = today.slice(0,7)+'-01';
+        async function loadGlobalStats() {
+            const snap = await db.ref('records').once('value');
+            const records = [];
+            snap.forEach(child => records.push(child.val()));
+            const today = new Date().toISOString().split('T')[0];
+            const weekAgo = new Date(Date.now() - 6*86400000).toISOString().split('T')[0];
+            const monthStart = today.slice(0,7) + '-01';
+            const todayR = records.filter(r => r.date === today);
+            const weekR = records.filter(r => r.date >= weekAgo);
+            const monthR = records.filter(r => r.date >= monthStart);
             document.getElementById('globalStatsRow').innerHTML = `
-                <div class="stat-box"><strong>Сегодня</strong>Произв: ${recordsCache.filter(r=>r.date===today).reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${recordsCache.filter(r=>r.date===today).reduce((s,r)=>s+r.defect,0)} кг</div>
-                <div class="stat-box"><strong>Неделя</strong>Произв: ${recordsCache.filter(r=>r.date>=weekAgo).reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${recordsCache.filter(r=>r.date>=weekAgo).reduce((s,r)=>s+r.defect,0)} кг</div>
-                <div class="stat-box"><strong>Месяц</strong>Произв: ${recordsCache.filter(r=>r.date>=monthStart).reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${recordsCache.filter(r=>r.date>=monthStart).reduce((s,r)=>s+r.defect,0)} кг</div>
+                <div class="stat-box"><strong>Сегодня</strong>Произв: ${todayR.reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${todayR.reduce((s,r)=>s+r.defect,0)} кг</div>
+                <div class="stat-box"><strong>Неделя</strong>Произв: ${weekR.reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${weekR.reduce((s,r)=>s+r.defect,0)} кг</div>
+                <div class="stat-box"><strong>Месяц</strong>Произв: ${monthR.reduce((s,r)=>s+r.produced,0)} кг<br>Брак: ${monthR.reduce((s,r)=>s+r.defect,0)} кг</div>
             `;
         }
 
         function switchAdminTab(tab) {
-            ['adminUsers','adminAddUser','adminAllRecords','adminGlobalStats'].forEach(id => document.getElementById(id).classList.add('hidden'));
-            document.querySelectorAll('#adminPage .tab').forEach(t=>t.classList.remove('active'));
-            document.getElementById('admin'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.remove('hidden');
-            document.querySelector(`#adminPage .tab[data-tab="${tab}"]`).classList.add('active');
-            if (tab === 'allRecords') loadAllRecords();
-            if (tab === 'globalStats') loadGlobalStats();
+            document.querySelectorAll('#adminPage .card').forEach(c => c.classList.add('hidden'));
+            document.querySelectorAll('#adminPage .tab').forEach(t => t.classList.remove('active'));
+            if (tab === 'users') {
+                document.getElementById('adminUsers').classList.remove('hidden');
+                document.querySelector('#adminPage .tab[data-tab="users"]').classList.add('active');
+                renderAdminUsers();
+            } else if (tab === 'addUser') {
+                document.getElementById('adminAddUser').classList.remove('hidden');
+                document.querySelector('#adminPage .tab[data-tab="addUser"]').classList.add('active');
+            } else if (tab === 'allRecords') {
+                document.getElementById('adminAllRecords').classList.remove('hidden');
+                document.querySelector('#adminPage .tab[data-tab="allRecords"]').classList.add('active');
+                populateUserFilter();
+                loadAllRecords();
+            } else if (tab === 'globalStats') {
+                document.getElementById('adminGlobalStats').classList.remove('hidden');
+                document.querySelector('#adminPage .tab[data-tab="globalStats"]').classList.add('active');
+                loadGlobalStats();
+            }
         }
-        document.getElementById('adminPage').querySelector('.nav-tabs').addEventListener('click', e => {
+
+        // Вкладки
+        document.querySelector('#workerPage .nav-tabs').addEventListener('click', e => {
+            if (e.target.classList.contains('tab')) switchWorkerTab(e.target.dataset.tab);
+        });
+        document.querySelector('#adminPage .nav-tabs').addEventListener('click', e => {
             if (e.target.classList.contains('tab')) switchAdminTab(e.target.dataset.tab);
         });
 
-        function showTempMessage(elementId, text, type) {
-            const el = document.getElementById(elementId);
-            el.textContent = text;
-            el.className = type === 'success' ? 'success-message' : 'error-message';
-            setTimeout(() => { el.textContent = ''; }, 3000);
-        }
+        // Enter на входе
+        document.getElementById('loginPassword').addEventListener('keypress', e => {
+            if (e.key === 'Enter') handleLogin();
+        });
     </script>
 </body>
 </html>

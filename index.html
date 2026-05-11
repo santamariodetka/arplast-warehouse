@@ -212,49 +212,50 @@
     </div>
 
     <script>
-        // ========== ВСТАВЬТЕ СВОЙ КОНФИГ ИЗ FIREBASE ==========
+        // ========== ВСТАВЬТЕ СВОЙ КОНФИГ ==========
         const firebaseConfig = {
-            apiKey: "AIzaSyA2Lvm2XUiRNLAmYeOMk1-fQ60OkPBImuk",
-  authDomain: "arplast-faa75.firebaseapp.com",
-  databaseURL: "https://arplast-faa75-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "arplast-faa75",
-  storageBucket: "arplast-faa75.firebasestorage.app",
-  messagingSenderId: "301530736071",
-  appId: "1:301530736071:web:8d6521eebaf4aaf49f65e2",
-  measurementId: "G-3QCFSCHK3W"
+            apiKey: "ВАШ_API_KEY",
+            authDomain: "ВАШ_PROJECT.firebaseapp.com",
+            databaseURL: "https://ВАШ_PROJECT-default-rtdb.firebaseio.com",
+            projectId: "ВАШ_PROJECT_ID",
+            storageBucket: "ВАШ_PROJECT.appspot.com",
+            messagingSenderId: "ВАШ_SENDER_ID",
+            appId: "ВАШ_APP_ID"
         };
-        // ======================================================
+        // ========================================
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         let currentUser = null;
 
-        // DOM-элементы
+        // Проверка соединения с базой при старте
+        db.ref('.info/connected').on('value', snap => {
+            console.log('Подключение к Firebase:', snap.val() === true ? 'активно' : 'отсутствует');
+        });
+
+        // DOM
         const loginPage = document.getElementById('loginPage');
         const workerPage = document.getElementById('workerPage');
         const adminPage = document.getElementById('adminPage');
         const userInfoBlock = document.getElementById('userInfoBlock');
         const currentUserDisplay = document.getElementById('currentUserDisplay');
 
-        // При загрузке страницы
         window.addEventListener('DOMContentLoaded', async () => {
             const saved = sessionStorage.getItem('currentUser');
             if (saved) {
                 currentUser = JSON.parse(saved);
-                // Проверяем, существует ли такой пользователь в базе
                 const snap = await db.ref('users').orderByChild('username').equalTo(currentUser.username).once('value');
                 if (!snap.exists()) {
                     sessionStorage.removeItem('currentUser');
                     currentUser = null;
                 } else {
-                    // Обновляем данные из базы (если пароль изменился)
                     snap.forEach(child => { currentUser = child.val(); });
                     sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
                 }
             }
 
-            // Создаём admin/admin при первом запуске
+            // Создаём admin/admin, если база пуста
             const rootSnap = await db.ref('users').once('value');
             if (!rootSnap.exists()) {
                 await db.ref('users').push({ username: 'admin', password: 'admin', role: 'admin' });
@@ -271,7 +272,6 @@
                 if (currentUser.role === 'admin') {
                     adminPage.classList.remove('hidden');
                     workerPage.classList.add('hidden');
-                    // Загружаем пользователей и сразу показываем вкладку "Пользователи"
                     renderAdminUsers();
                     populateUserFilter();
                     switchAdminTab('users');
@@ -289,7 +289,7 @@
             }
         }
 
-        // ========== АВТОРИЗАЦИЯ ==========
+        // Авторизация
         async function handleLogin() {
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value;
@@ -319,7 +319,7 @@
             location.reload();
         }
 
-        // ========== РАБОЧИЙ ==========
+        // ---------- Рабочий ----------
         async function saveRecord() {
             const date = document.getElementById('recordDate').value;
             const produced = parseFloat(document.getElementById('produced').value) || 0;
@@ -346,6 +346,7 @@
                 refreshWorkerStats();
             } catch (e) {
                 msgEl.textContent = 'Ошибка сохранения';
+                console.error(e);
             }
         }
 
@@ -417,63 +418,61 @@
             if (e.target.classList.contains('tab')) switchWorkerTab(e.target.dataset.tab);
         });
 
-        // ========== АДМИНИСТРАТОР ==========
+        // ---------- Админ ----------
         async function renderAdminUsers() {
-            const snap = await db.ref('users').once('value');
-            const users = [];
-            snap.forEach(child => users.push(child.val()));
-            const tbody = document.getElementById('usersTableBody');
-            tbody.innerHTML = users.map(u => `
-                <tr>
-                    <td>${u.username}</td>
-                    <td>${u.role === 'admin' ? 'Админ' : 'Рабочий'}</td>
-                    <td>
-                        <div class="password-cell">
-                            <span id="pass_${u.username}">${'*'.repeat(u.password.length)}</span>
-                            <button class="btn btn-sm" onclick="togglePassword('${u.username}', '${u.password.replace(/'/g, "\\'")}')">👁</button>
-                        </div>
-                    </td>
-                    <td>
-                        ${u.username !== 'admin' ? 
-                            `<button class="btn btn-danger btn-sm" onclick="deleteUser('${u.username}')">Удалить</button>` : 
-                            'Системный'}
-                    </td>
-                </tr>
-            `).join('');
+            try {
+                const snap = await db.ref('users').once('value');
+                console.log('Загружено пользователей:', snap.numChildren());
+                const users = [];
+                snap.forEach(child => users.push(child.val()));
+                console.log('Список пользователей:', users);
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = users.map(u => `
+                    <tr>
+                        <td>${u.username}</td>
+                        <td>${u.role === 'admin' ? 'Админ' : 'Рабочий'}</td>
+                        <td>
+                            <div class="password-cell">
+                                <span id="pass_${u.username}">${'*'.repeat(u.password.length)}</span>
+                                <button class="btn btn-sm" onclick="togglePassword('${u.username}', '${u.password.replace(/'/g, "\\'")}')">👁</button>
+                            </div>
+                        </td>
+                        <td>
+                            ${u.username !== 'admin' ? 
+                                `<button class="btn btn-danger btn-sm" onclick="deleteUser('${u.username}')">Удалить</button>` : 
+                                'Системный'}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch(e) {
+                console.error('Ошибка загрузки пользователей:', e);
+                alert('Ошибка чтения базы. Откройте консоль (F12) и пришлите скриншот ошибки.');
+            }
         }
 
-        // Показать/скрыть пароль
         window.togglePassword = function(username, realPass) {
             const span = document.getElementById('pass_' + username);
-            if (span.textContent === realPass) {
-                span.textContent = '*'.repeat(realPass.length);
-            } else {
-                span.textContent = realPass;
-            }
+            if (span.textContent === realPass) span.textContent = '*'.repeat(realPass.length);
+            else span.textContent = realPass;
         };
 
-        // Удаление пользователя
         async function deleteUser(username) {
-            if (!confirm(`Удалить пользователя "${username}" безвозвратно?`)) return;
-            // Удаляем пользователя
+            if (!confirm(`Удалить пользователя "${username}"?`)) return;
             const snapUsers = await db.ref('users').orderByChild('username').equalTo(username).once('value');
             const userUpdates = {};
             snapUsers.forEach(child => { userUpdates[child.key] = null; });
             await db.ref('users').update(userUpdates);
 
-            // Удаляем его записи
             const snapRecords = await db.ref('records').orderByChild('username').equalTo(username).once('value');
             const recUpdates = {};
             snapRecords.forEach(child => { recUpdates[child.key] = null; });
             await db.ref('records').update(recUpdates);
 
-            // Перезагружаем список пользователей и переключаемся на вкладку
             await renderAdminUsers();
-            await populateUserFilter();
+            populateUserFilter();
             switchAdminTab('users');
         }
 
-        // Добавление пользователя
         async function addUser() {
             const login = document.getElementById('newUserLogin').value.trim();
             const pass = document.getElementById('newUserPass').value.trim();
@@ -483,31 +482,36 @@
             msgEl.textContent = '';
 
             if (!login || !pass || login.length < 3 || pass.length < 3) {
-                msgEl.textContent = 'Логин и пароль должны быть не менее 3 символов';
+                msgEl.textContent = 'Логин и пароль от 3 символов';
                 return;
             }
 
-            // Проверка существующего пользователя
-            const check = await db.ref('users').orderByChild('username').equalTo(login).once('value');
-            if (check.exists()) {
-                msgEl.textContent = 'Пользователь с таким логином уже существует';
-                return;
+            console.log('Пытаюсь добавить пользователя:', login);
+            try {
+                const check = await db.ref('users').orderByChild('username').equalTo(login).once('value');
+                if (check.exists()) {
+                    msgEl.textContent = 'Пользователь уже существует';
+                    return;
+                }
+
+                const newUserRef = db.ref('users').push();
+                await newUserRef.set({ username: login, password: pass, role: role });
+                console.log('Пользователь добавлен, ключ:', newUserRef.key);
+
+                document.getElementById('newUserLogin').value = '';
+                document.getElementById('newUserPass').value = '';
+                msgEl.className = 'success-message';
+                msgEl.textContent = 'Пользователь создан!';
+                setTimeout(() => { msgEl.textContent = ''; msgEl.className = 'error-message'; }, 3000);
+
+                // Немедленно обновить список
+                await renderAdminUsers();
+                await populateUserFilter();
+                switchAdminTab('users');
+            } catch(e) {
+                console.error('Ошибка добавления пользователя:', e);
+                msgEl.textContent = 'Ошибка базы данных: ' + e.message;
             }
-
-            // Добавляем в базу
-            await db.ref('users').push({ username: login, password: pass, role: role });
-
-            // Очищаем форму
-            document.getElementById('newUserLogin').value = '';
-            document.getElementById('newUserPass').value = '';
-            msgEl.className = 'success-message';
-            msgEl.textContent = 'Пользователь создан!';
-            setTimeout(() => { msgEl.textContent = ''; msgEl.className = 'error-message'; }, 3000);
-
-            // Обязательно обновляем список и переключаемся на вкладку "Пользователи"
-            await renderAdminUsers();
-            await populateUserFilter();
-            switchAdminTab('users');
         }
 
         async function populateUserFilter() {
@@ -531,8 +535,7 @@
             if (dateTo) filtered = filtered.filter(r => r.date <= dateTo);
             if (userFilter !== 'all') filtered = filtered.filter(r => r.username === userFilter);
             filtered.sort((a,b) => b.date.localeCompare(a.date) || a.username.localeCompare(b.username));
-            const tbody = document.getElementById('allRecordsTable');
-            tbody.innerHTML = filtered.length ? filtered.map(r =>
+            document.getElementById('allRecordsTable').innerHTML = filtered.length ? filtered.map(r =>
                 `<tr><td>${r.date}</td><td>${r.username}</td><td>${r.produced}</td><td>${r.defect}</td><td>${r.reason || '-'}</td></tr>`
             ).join('') : '<tr><td colspan="5">Нет записей</td></tr>';
         }
@@ -580,7 +583,6 @@
             if (e.target.classList.contains('tab')) switchAdminTab(e.target.dataset.tab);
         });
 
-        // Enter на входе
         document.getElementById('loginPassword').addEventListener('keypress', e => {
             if (e.key === 'Enter') handleLogin();
         });
